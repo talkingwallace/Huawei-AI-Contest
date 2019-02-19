@@ -1,7 +1,7 @@
 # Huawei-AI-Test
     Huawei ai 比赛 特征提取网络训练
 # 说明
-    运行src中的main.py 即可开始训练
+    运行src中的main.py 即可开始训练,参数设定在main.py中
     在Network中可以定义网络
     DataLoader负责从aifood_en中读取图片，基于pytorch 的dataloader，可以自己托管数据并生成训练数据
     Trainer负责训练
