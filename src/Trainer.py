@@ -4,17 +4,21 @@ Create Trainer to control the process of training
 """
 import numpy as np
 from torch import Tensor
+import torch
 
 class Trainer(object):
 
-    def __init__(self, model,optimizer,lostFunc,dataLoder,para):
+    def __init__(self, model,optimizer,lostFunc,dataLoder,testLoader,para):
         self.model = model
         self.opt = optimizer
         self.crit = lostFunc
         self.dataLoader = dataLoder
+        self.testLoader = testLoader
         self.epochs = para['num_epoch']
         self.useGPU = para['useGPU']
         self.para = para
+        self.saveEveryEpochs = para['saveEveryEpochs']
+        self.lossLogger = {}
 
 
     # 训练一批
@@ -40,14 +44,39 @@ class Trainer(object):
         for ID,smpl in enumerate(self.dataLoader):
             loss = self.train_single_batch(smpl[0],smpl[1],ID)
             print('[Training Epoch {}] Batch {}, Loss {}'.format(epoch_id, ID, loss))
+            self.lossLogger[ID] = loss
 
 
     def train(self):
 
         for i in range(0,self.epochs):
             self.train_an_epoch(i)
+            if (i+1)%self.saveEveryEpochs == 0:
+                torch.save(self.model,'epoch_'+str(i)+'_model.pkl')
+                print('model of epoch'+str(i)+' saved')
         print('训练完成!')
 
-    # 暂时还不需要测试功能
+    # 测试网络
     def test(self):
-        pass
+
+        totalLoss = 0
+        for ID,testData in enumerate(self.testLoader):
+            print('testing batch:'+str(ID))
+            image = testData[0]
+            labels = testData[1]
+
+            if self.useGPU == True:
+                image = image.cuda()
+                labels = labels.cuda()
+
+            labels_pred = self.model(image.cuda())
+            loss = self.crit(labels_pred, labels)
+            loss = loss.data.cpu().numpy()
+            totalLoss += loss
+
+        print('total loss of '+str(len(self.testLoader))+' batches')
+        print(totalLoss)
+        print('avg loss:')
+        print(totalLoss/len(self.testLoader))
+
+        return totalLoss
