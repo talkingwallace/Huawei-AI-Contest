@@ -102,6 +102,6 @@ df = pd.DataFrame()
 df['x'] = x
 df['y'] = y
 df['class'] = strLabel
-df = df[0:100]
+
 ax = sb.scatterplot(x="x", y="y", hue="class", data=df)
 plt.show()
